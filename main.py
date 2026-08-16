@@ -1,8 +1,38 @@
+import sqlite3
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 app = FastAPI()
 
+def init_db():
+    conn = sqlite3.connect("tasks.db")
+
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            done BOOLEAN NOT NULL
+        )
+    """)
+
+    cursor = conn.execute("SELECT COUNT(*) FROM tasks")
+    count = cursor.fetchone()[0]
+
+    if count == 0:
+        conn.executemany(
+            "INSERT INTO tasks (title, done) VALUES (?, ?)",
+            [
+                ("Learn FastAPI", False),
+                ("Build CRUD API", False),
+                ("Push project to GitHub", True)
+            ]
+        )
+
+    conn.commit()
+    conn.close()
+
+
+init_db()
 tasks = [
     {
         "id": 1,
